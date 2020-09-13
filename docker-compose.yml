@@ -1,22 +1,22 @@
 version: '2'
 
 services:
-
-  redis:
-    image: redis
-
-  web:
+  dummy-webhook:
     build:
       context: ./web/
     ports:
       - "8000:8000"
-    links:
-      - redis
+    volumes:
+      - ./nginx/certificates:/etc/dummy/certificates
 
   nginx:
     restart: always
     build: ./nginx/
     ports:
-      - "80:80"
+      - "5000:80"
     links:
-      - web
+      - dummy-webhook
+    volumes:
+      - ./nginx/sites-enabled/:/etc/nginx/sites-enabled
+      - ./nginx/certificates:/etc/nginx/certificates
+      - /etc/ssl/certs:/etc/ssl/certs

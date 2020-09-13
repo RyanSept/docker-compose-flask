@@ -16,15 +16,12 @@
 import os
 import socket
 
-from flask import Flask
-from redis import Redis
-
+from flask import Flask, request
 
 app = Flask(__name__)
-redis = Redis(host=os.environ.get('REDIS_HOST', 'redis'), port=6379)
 
 
-@app.route('/')
+@app.route("/", methods=["GET", "POST"])
 def hello():
-    redis.incr('hits')
-    return 'Hello Container World! I have been seen %s times and my hostname is %s.\n' % (redis.get('hits'),socket.gethostname())
+    print request.data
+    return "Hello Container World! My hostname is {}.\n".format(socket.gethostname())

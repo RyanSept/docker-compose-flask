@@ -1,14 +1,34 @@
 server {
+    access_log /dev/stdout;
+    error_log /dev/stdout info;
 
-    listen 80;
+    listen 80 ssl;
     server_name 0.0.0.0;
     charset utf-8;
 
+    ssl_certificate /etc/nginx/certificates/cert.crt;
+    ssl_certificate_key /etc/nginx/certificates/cert.pem;
+
+    ssl_verify_client on;
+    ssl_client_certificate /etc/nginx/certificates/DigiCertChain.crt;
+    ssl_verify_depth 2;
+
     location / {
-        proxy_pass http://web:8000;
+        if ($ssl_client_verify != SUCCESS) {
+            return 403;
+        }
+
+        if ( $ssl_client_s_dn != "/C=US/ST=New York/L=New York/O=Percolate Industries, Inc./CN=Percolate Industries, Inc." ){
+            add_header Cert-Subject-Details $ssl_client_s_dn;
+            return 400;
+        }
+
+        proxy_pass http://dummy-webhook:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # add_header SSL_CLIENT_CERT $ssl_client_cert;
+        add_header Cert-Subject-Details $ssl_client_s_dn;
     }
 
 }
